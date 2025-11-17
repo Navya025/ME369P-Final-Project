@@ -27,8 +27,11 @@ class CameraFeed():
 
         self.detector = cv2.SimpleBlobDetector_create(params)
 
-    def begin_feed(self, port):
-        self.cap = cv2.VideoCapture(port)
+    def begin_feed(self, source):
+     
+        self.cap = cv2.VideoCapture(source)
+        if not self.cap.isOpened():
+            raise RuntimeError(f"Failed to open video source: {source}")
 
     def close_feed(self):
         self.cap.release()
@@ -91,18 +94,23 @@ class CameraFeed():
 
         mean_color = cv2.mean(frame, mask=mask)
         return mean_color[:3] 
+if __name__ == "__main__":
+    feed = CameraFeed()
+    feed.begin_feed("test_video_red_cheats.mp4")
 
-feed = CameraFeed()
-feed.begin_feed(0)
-while True:
-    frame, gray, keypoints = feed.detect_ellipse()
-    output = cv2.drawKeypoints(frame, keypoints, np.array([]), (0, 0, 255),
-                          cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    cv2.imshow("Camera Feed", output)
-    cv2.imshow("Computer Vision", gray)
-    board_state = feed.board_state()
-    os.system('cls')
-    print(board_state)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    while True:
+        frame, gray, keypoints = feed.detect_ellipse()
+        output = cv2.drawKeypoints(frame, keypoints, np.array([]), (0, 0, 255),
+                            cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        cv2.imshow("Camera Feed", output)
+        cv2.imshow("Computer Vision", gray)
+        board_state = feed.board_state()
+        os.system('cls')
+        print(board_state)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    feed.close_feed()
+    cv2.destroyAllWindows()
