@@ -103,7 +103,6 @@ while True:
     board_state = feed.board_state()
     os.system('cls')
     print(board_state)
-    # time.sleep(0.2)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
