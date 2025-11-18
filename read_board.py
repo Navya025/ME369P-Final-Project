@@ -57,7 +57,7 @@ class CameraFeed():
         frame, gray, keypoints = self.detect_ellipse()
 
         if len(keypoints) != 42:
-            return None
+            return None, None
         
         params = cv2.CirclesGridFinderParameters()
 
@@ -67,10 +67,14 @@ class CameraFeed():
                                               blobDetector=self.detector,
                                               parameters=params)
         
+        if centers is None:
+            return None, None
+        
         if len(centers) != 42:
-            return None
+            return None, None
         
         board_state = np.zeros((columns,rows))
+        board_positions = np.zeros((columns,rows,2))
         pos_array = np.array([[point.pt[0], point.pt[1]] for point in keypoints])
         for i, center in enumerate(centers):
             keypoint_idx = np.argmin(np.linalg.norm(pos_array - center, axis=1))
@@ -82,8 +86,9 @@ class CameraFeed():
             color_map = np.array([BG_COLOR,RD_COLOR,YL_COLOR])
             color_idx = np.argmin(np.linalg.norm(color_map - color, axis=1))
             board_state[i // rows, i % rows] = color_idx
+            board_positions[i // rows, i % rows, :] = pos_array[keypoint_idx,:]
 
-        return board_state.T
+        return board_state.T, board_positions.transpose(1,0,2)
     
     def average_color(self, frame, keypoint):
         x, y = keypoint.pt
@@ -96,7 +101,7 @@ class CameraFeed():
         return mean_color[:3] 
 if __name__ == "__main__":
     feed = CameraFeed()
-    feed.begin_feed("test_video_red_cheats.mp4")
+    feed.begin_feed(1)
 
 
     while True:
@@ -105,10 +110,9 @@ if __name__ == "__main__":
                             cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
         cv2.imshow("Camera Feed", output)
         cv2.imshow("Computer Vision", gray)
-        board_state = feed.board_state()
+        board_state, board_positions = feed.board_state()
         os.system('cls')
         print(board_state)
-
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
