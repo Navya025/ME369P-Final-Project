@@ -4,9 +4,13 @@ import time
 import cv2
 import numpy as np
 from PIL import Image, ImageTk
+import winsound
+
 
 from read_board import CameraFeed
 from connect4_solver import RED, YEL, choose_best_move, is_winner
+
+
 
 
 class Connect4VideoGUI:
@@ -181,6 +185,16 @@ class Connect4VideoGUI:
         elif piece == YEL:
             return "Yellow"
         return "Unknown"
+    
+    # Plays sound when someone is caught cheating 
+    def _play_cheat_sound(self):
+        
+        try:
+            winsound.PlaySound("you-cheat.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
+            print("Cheater sound played!")
+        except Exception as e:
+            print(f"Error playing cheat sound: {e}")
+
     # New stable board state update 
     def _update_stable_board(self, board_state):
         
@@ -320,6 +334,7 @@ class Connect4VideoGUI:
                         self.message_label.config(
                             text=f"Cheating detected: {color_name} played twice in a row!"
                         )
+                        self._play_cheat_sound()
                         self.timer_running = False
                         self.game_over = True
 
@@ -455,6 +470,6 @@ if __name__ == "__main__":
     # app = Connect4VideoGUI(root, camera_port=0)
 
     # Uncomment to put in a prerecorded video file rather than a camera 
-    app = Connect4VideoGUI(root, video_path="test_video_red_wins.mp4")
+    app = Connect4VideoGUI(root, video_path="yellow_cheats.mp4")
     root.mainloop()
 
