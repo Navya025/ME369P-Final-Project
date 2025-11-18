@@ -16,16 +16,21 @@ from connect4_solver import RED, YEL, choose_best_move, is_winner
 class Connect4VideoGUI:
     # Replace video_path with camera_port = 0
     def __init__(self, root, video_path):
+    # def __init__(self, root, camera_port = 0): # this line takes in the camera port instead of the video path 
         self.root = root
         self.root.title("Connect 4 Live (Webcam + AI)")
 
         # # Initialize camera 
+        
+        # Uncomment/comment to switch to camera mode 
         # self.feed = CameraFeed()
-        # print(f"[CAMERA MODE] Using webcam index: {camera_port}") # use gui.py to test with prerecorded videos 
+        # print(f"[CAMERA MODE] Using webcam index: {camera_port}") 
         # self.feed.begin_feed(camera_port)
 
+        # Uncomment/comment to switch to video file mode 
         # Initialize prerecorded video 
         self.feed = CameraFeed()
+        print(f"[VIDEO FILE MODE] Using video path: {video_path}") 
         self.feed.begin_feed(video_path)
 
         # Initialize timer
@@ -89,30 +94,30 @@ class Connect4VideoGUI:
             top_frame, text="Connect 4 Live",
             font=("Helvetica", 20, "bold")
         )
-        title_label.pack(side=tk.LEFT, padx=10)
+        title_label.pack(side=tk.LEFT, padx=10) # pack titel left 
 
         self.timer_label = tk.Label(
             top_frame, text="Time: 00:00",
             font=("Helvetica", 14)
         )
-        self.timer_label.pack(side=tk.RIGHT, padx=10)
+        self.timer_label.pack(side=tk.RIGHT, padx=10) # pack title right 
 
         self.turn_label = tk.Label(
             top_frame, text="Turn: 0",
             font=("Helvetica", 14)
         )
-        self.turn_label.pack(side=tk.RIGHT, padx=10)
+        self.turn_label.pack(side=tk.RIGHT, padx=10) # pack title right 
 
         # Status messages 
         status_frame = tk.Frame(self.root)
-        status_frame.pack(pady=5, fill=tk.X)
+        status_frame.pack(pady=5, fill=tk.X) 
 
         self.status_label = tk.Label(
             status_frame,
             text="Initializing camera and detection...",
             font=("Helvetica", 12)
         )
-        self.status_label.pack()
+        self.status_label.pack() # at the top, pack() will space things 
 
         self.message_label = tk.Label(
             status_frame,
@@ -129,7 +134,7 @@ class Connect4VideoGUI:
             font=("Helvetica", 13, "bold"),
             fg="green"
         )
-        self.winner_label.pack()
+        self.winner_label.pack() 
 
         # Video display 
         self.video_label = tk.Label(self.root)
@@ -268,9 +273,9 @@ class Connect4VideoGUI:
     
     # Helper to find which row to land 
     def _find_landing_row(self, board, col):
-        rows, _ = board.shape
-        for r in range(rows - 1, -1, -1):  # bottom to top
-            if board[r, col] == 0:
+        rows, _ = board.shape 
+        for r in range(rows - 1, -1, -1):  # bottom to top, iterate through all the rows 
+            if board[r, col] == 0: # iterate until the last 0 (or empty spot)
                 return r
         return None
 
@@ -292,11 +297,12 @@ class Connect4VideoGUI:
             self.root.after(100, self._update_video)
             return
 
+        # this section catches errors 
         if frame is None:
             if self.game_over:
                 self.root.after(100, self._update_video)
                 return
-            self.message_label.config(text="No frame from camera. Check connection.")
+            self.message_label.config(text="No frame from camera. Check connection.") 
             self.root.after(200, self._update_video)
             return
 
@@ -311,6 +317,8 @@ class Connect4VideoGUI:
 
 
         stable_changed = self._update_stable_board(board_state)
+        
+        # Messages to catch incomplete board 
 
         if board_state is None and self.stable_board is None:
             self.status_label.config(text="Board not detected.")
@@ -334,7 +342,7 @@ class Connect4VideoGUI:
                         self.message_label.config(
                             text=f"Cheating detected: {color_name} played twice in a row!"
                         )
-                        self._play_cheat_sound()
+                        self._play_cheat_sound() # call to play sound :) 
                         self.timer_running = False
                         self.game_over = True
 
@@ -373,8 +381,8 @@ class Connect4VideoGUI:
 
                     try:
                         board_list = logic_board.tolist()
-                        best_col, _ = choose_best_move(board_list, ai_piece=YEL, depth=4)  
-                    except Exception as e:
+                        best_col, _ = choose_best_move(board_list, ai_piece=YEL, depth=4)  # call to choose_best_move
+                    except Exception as e: # catch exceptions from the solver 
                         best_col = None
                         self.current_suggested_col = None
                         self.status_label.config(text="Error computing AI move.")
@@ -383,7 +391,7 @@ class Connect4VideoGUI:
                     else:
                         self.current_suggested_col = best_col
 
-                        if best_col is None:  
+                        if best_col is None:  # potential error msgs 
                             self.status_label.config(
                                 text="Board detected, but no valid moves (board full or invalid)."
                             )
@@ -393,7 +401,7 @@ class Connect4VideoGUI:
                                 )
                         else:
                             self.status_label.config(
-                                text=f"Board detected. AI suggests column: {best_col+1}"
+                                text=f"Board detected. AI suggests column: {best_col+1}" # need to add +1 since indexing starts at 0
                             )
 
                             try:
@@ -403,10 +411,11 @@ class Connect4VideoGUI:
                                 rows, cols = logic_board.shape
                                 col = int(best_col)
                                 if not (0 <= col < cols):
-                                    raise ValueError(f"Best column {col} out of bounds.")
+                                    raise ValueError(f"Best column {col} out of bounds.") # ONLY checks for columns 
 
                                 # board_positions[row, col] = (x, y)
-                                # row = 0 --> very top row in camera view
+                                # row = 0 -> very top row in camera view
+                                # cx and cy 
                                 cx_top, cy_top = board_positions[0, col]
                                 cx_top_i = int(round(cx_top))
                                 cy_top_i = int(round(cy_top))
@@ -436,7 +445,7 @@ class Connect4VideoGUI:
                                         thickness=2,
                                         tipLength=0.1
                                     )
-
+                                # Circle at top column 
                                 cv2.circle(output, (cx_top_i, cy_top_i), radius_i, (0, 255, 0), thickness=-1)
 
                             except Exception as e:
@@ -453,7 +462,7 @@ class Connect4VideoGUI:
 
         self.root.after(30, self._update_video)
 
-    # Making sure it closes 
+    # Making sure it closes  
 
     def on_close(self):
         self.timer_running = False
@@ -467,9 +476,10 @@ class Connect4VideoGUI:
 if __name__ == "__main__":
     root = tk.Tk()
     # 0 = default webcam, change if needed (1, 2, ...) to whichever port you're using 
+    # Uncomment/comment to put in a webcam instead of a prerecorded video file 
     # app = Connect4VideoGUI(root, camera_port=0)
 
-    # Uncomment to put in a prerecorded video file rather than a camera 
-    app = Connect4VideoGUI(root, video_path="yellow_cheats.mp4")
+    # Uncomment/comment to put in a prerecorded video file rather than a camera 
+    app = Connect4VideoGUI(root, video_path="test_video_red_cheats.mp4")
     root.mainloop()
 
