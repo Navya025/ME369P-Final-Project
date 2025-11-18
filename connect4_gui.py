@@ -353,79 +353,80 @@ class Connect4VideoGUI:
                         
 
                 # Best move + cheating detection 
-                self.prev_suggested_col = self.current_suggested_col
-
-                try:
-                    board_list = logic_board.tolist()
-                    best_col, _ = choose_best_move(board_list, ai_piece=YEL, depth=4) # calls best move solver 
-                except Exception as e:
-                    best_col = None
-                    self.current_suggested_col = None
-                    self.status_label.config(text="Error computing AI move.")
-                    if "Cheating detected" not in self.message_label.cget("text"):
-                        self.message_label.config(text=f"AI error: {e}")
-                else:
-                    self.current_suggested_col = best_col
-
-                    if best_col is None: # checks for invalid boards or bad positions 
-                        self.status_label.config(
-                            text="Board detected, but no valid moves (board full or invalid)."
-                        )
-                        if "Cheating detected" not in self.message_label.cget("text"):
-                            self.message_label.config(
-                                text="No move available - this position is effectively terminal."
-                            )
-                    else:
-                        self.status_label.config(
-                            text=f"Board detected. AI suggests column: {best_col+1}"
-                        )
+                if not self.game_over:
+                    self.prev_suggested_col = self.current_suggested_col
 
                     try:
-                        if logic_board is None or board_positions is None:
-                            raise ValueError("No board positions available for highlight.")
+                        board_list = logic_board.tolist()
+                        best_col, _ = choose_best_move(board_list, ai_piece=YEL, depth=4)  
+                    except Exception as e:
+                        best_col = None
+                        self.current_suggested_col = None
+                        self.status_label.config(text="Error computing AI move.")
+                        if "Cheating detected" not in self.message_label.cget("text"):
+                            self.message_label.config(text=f"AI error: {e}")
+                    else:
+                        self.current_suggested_col = best_col
 
-                        rows, cols = logic_board.shape
-                        col = int(best_col)
-                        if not (0 <= col < cols):
-                            raise ValueError(f"Best column {col} out of bounds.")
-
-                        # board_positions[row, col] = (x, y)
-                        # row = 0 --> very top row in camera view
-                        cx_top, cy_top = board_positions[0, col]
-                        cx_top_i = int(round(cx_top))
-                        cy_top_i = int(round(cy_top))
-
-                        # Radius relative to grid spacing
-                        if rows > 1:
-                            cy1 = board_positions[0, col][1]
-                            cy2 = board_positions[1, col][1]
-                            cell_h = abs(cy2 - cy1)
-                            radius_i = int(max(8, round(cell_h * 0.35)))
+                        if best_col is None:  
+                            self.status_label.config(
+                                text="Board detected, but no valid moves (board full or invalid)."
+                            )
+                            if "Cheating detected" not in self.message_label.cget("text"):
+                                self.message_label.config(
+                                    text="No move available - this position is effectively terminal."
+                                )
                         else:
-                            radius_i = 20
-
-                        landing_row = self._find_landing_row(logic_board, col)
-
-                        if landing_row is not None:
-                            x_end, y_end = board_positions[landing_row, col]
-                            x_end_i = int(round(x_end))
-                            y_end_i = int(round(y_end))
-
-                            # Draw arrow from ghost circle to landing cell
-                            cv2.arrowedLine(
-                                output,
-                                (cx_top_i, cy_top_i),
-                                (x_end_i, y_end_i),
-                                (0, 255, 0),
-                                thickness=2,
-                                tipLength=0.1
+                            self.status_label.config(
+                                text=f"Board detected. AI suggests column: {best_col+1}"
                             )
 
-                        cv2.circle(output, (cx_top_i, cy_top_i), radius_i, (0, 255, 0), thickness=-1)
+                            try:
+                                if logic_board is None or board_positions is None:
+                                    raise ValueError("No board positions available for highlight.")
 
-                    except Exception as e:
-                        if "Cheating detected" not in self.message_label.cget("text"):
-                            self.message_label.config(text=f"Highlight error: {e}")
+                                rows, cols = logic_board.shape
+                                col = int(best_col)
+                                if not (0 <= col < cols):
+                                    raise ValueError(f"Best column {col} out of bounds.")
+
+                                # board_positions[row, col] = (x, y)
+                                # row = 0 --> very top row in camera view
+                                cx_top, cy_top = board_positions[0, col]
+                                cx_top_i = int(round(cx_top))
+                                cy_top_i = int(round(cy_top))
+
+                                # Radius relative to grid spacing
+                                if rows > 1:
+                                    cy1 = board_positions[0, col][1]
+                                    cy2 = board_positions[1, col][1]
+                                    cell_h = abs(cy2 - cy1)
+                                    radius_i = int(max(8, round(cell_h * 0.35)))
+                                else:
+                                    radius_i = 20
+
+                                landing_row = self._find_landing_row(logic_board, col)
+
+                                if landing_row is not None:
+                                    x_end, y_end = board_positions[landing_row, col]
+                                    x_end_i = int(round(x_end))
+                                    y_end_i = int(round(y_end))
+
+                                    # Draw arrow from topmost circle to landing circle 
+                                    cv2.arrowedLine(
+                                        output,
+                                        (cx_top_i, cy_top_i),
+                                        (x_end_i, y_end_i),
+                                        (0, 255, 0),
+                                        thickness=2,
+                                        tipLength=0.1
+                                    )
+
+                                cv2.circle(output, (cx_top_i, cy_top_i), radius_i, (0, 255, 0), thickness=-1)
+
+                            except Exception as e:
+                                if "Cheating detected" not in self.message_label.cget("text"):
+                                    self.message_label.config(text=f"Highlight error: {e}")
 
 
 
