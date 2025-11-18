@@ -10,14 +10,19 @@ from connect4_solver import RED, YEL, choose_best_move, is_winner
 
 
 class Connect4VideoGUI:
-    def __init__(self, root, camera_port=0):
+    # Replace video_path with camera_port = 0
+    def __init__(self, root, video_path):
         self.root = root
         self.root.title("Connect 4 Live (Webcam + AI)")
 
-        # Initialize camera 
+        # # Initialize camera 
+        # self.feed = CameraFeed()
+        # print(f"[CAMERA MODE] Using webcam index: {camera_port}") # use gui.py to test with prerecorded videos 
+        # self.feed.begin_feed(camera_port)
+
+        # Initialize prerecorded video 
         self.feed = CameraFeed()
-        print(f"[CAMERA MODE] Using webcam index: {camera_port}") # use gui.py to test with prerecorded videos 
-        self.feed.begin_feed(camera_port)
+        self.feed.begin_feed(video_path)
 
         # Initialize timer
         self.start_time = time.time()
@@ -206,14 +211,14 @@ class Connect4VideoGUI:
         if prev_board is None:
             prev_board = np.zeros_like(curr_board)
 
-        new_mask = (prev_board == 0) & (curr_board != 0)
-        removed_mask = (prev_board != 0) & (curr_board == 0)
-        recolor_mask = (prev_board != 0) & (curr_board != 0) & (prev_board != curr_board)
+        new_board = (prev_board == 0) & (curr_board != 0)
+        removed_board = (prev_board != 0) & (curr_board == 0)
+        recolor_board = (prev_board != 0) & (curr_board != 0) & (prev_board != curr_board)
 
-        new_positions = np.argwhere(new_mask)
+        new_positions = np.argwhere(new_board)
         new_count = len(new_positions)
 
-        if new_count != 1 or np.any(removed_mask) or np.any(recolor_mask):
+        if new_count != 1 or np.any(removed_board) or np.any(recolor_board):
             self.last_move_col = None
             return None, None
 
@@ -246,15 +251,18 @@ class Connect4VideoGUI:
             winner_color = None
 
         return cheater_color, winner_color
+    
+    # Helper to find which row to land 
+    def _find_landing_row(self, board, col):
+        rows, _ = board.shape
+        for r in range(rows - 1, -1, -1):  # bottom to top
+            if board[r, col] == 0:
+                return r
+        return None
 
     # All video updates 
-
     def _update_video(self):
-        """
-        Run board detection + AI on each frame from the webcam,
-        track stable boards, detect cheating & winner, and
-        note when the *first mover* ignores the AI suggestion.
-        """
+    
         if self.game_over:
             # Keep last frame + banners visible
             self.root.after(100, self._update_video)
@@ -285,7 +293,9 @@ class Connect4VideoGUI:
             cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
         )
 
-        board_state = self.feed.board_state()
+        board_state, board_positions = self.feed.board_state()
+
+
         stable_changed = self._update_stable_board(board_state)
 
         if board_state is None and self.stable_board is None:
@@ -337,7 +347,7 @@ class Connect4VideoGUI:
                             self.message_label.config(
                                 text=(
                                     f"First player ignored AI: played column "
-                                    f"{self.last_move_col}, suggested {self.prev_suggested_col}."
+                                    f"{self.last_move_col+1}, suggested {self.prev_suggested_col+1}."
                                 )
                             )
                         
@@ -347,7 +357,7 @@ class Connect4VideoGUI:
 
                 try:
                     board_list = logic_board.tolist()
-                    best_col, _ = choose_best_move(board_list, ai_piece=YEL, depth=4)
+                    best_col, _ = choose_best_move(board_list, ai_piece=YEL, depth=4) # calls best move solver 
                 except Exception as e:
                     best_col = None
                     self.current_suggested_col = None
@@ -357,7 +367,7 @@ class Connect4VideoGUI:
                 else:
                     self.current_suggested_col = best_col
 
-                    if best_col is None:
+                    if best_col is None: # checks for invalid boards or bad positions 
                         self.status_label.config(
                             text="Board detected, but no valid moves (board full or invalid)."
                         )
@@ -367,37 +377,57 @@ class Connect4VideoGUI:
                             )
                     else:
                         self.status_label.config(
-                            text=f"Board detected. AI suggests column: {best_col}"
+                            text=f"Board detected. AI suggests column: {best_col+1}"
                         )
 
-                        try:
-                            rows, cols = logic_board.shape
-                            col = int(best_col)
+                    try:
+                        if logic_board is None or board_positions is None:
+                            raise ValueError("No board positions available for highlight.")
 
-                            if keypoints:
-                                xs = [kp.pt[0] for kp in keypoints]
-                                ys = [kp.pt[1] for kp in keypoints]
-                                min_x, max_x = min(xs), max(xs)
-                                min_y, max_y = min(ys), max(ys)
-                                board_width = max_x - min_x
-                                board_height = max_y - min_y
+                        rows, cols = logic_board.shape
+                        col = int(best_col)
+                        if not (0 <= col < cols):
+                            raise ValueError(f"Best column {col} out of bounds.")
 
-                                cx = int(min_x + (col + 0.5) * board_width / cols)
-                                row_height = board_height / rows
-                                cy = int(min_y - 0.4 * row_height)
-                                cy = max(cy, 0)
+                        # board_positions[row, col] = (x, y)
+                        # row = 0 --> very top row in camera view
+                        cx_top, cy_top = board_positions[0, col]
+                        cx_top_i = int(round(cx_top))
+                        cy_top_i = int(round(cy_top))
 
-                                radius = int(0.4 * (board_width / cols))
-                            else:
-                                h, w, _ = output.shape
-                                cx = int((col + 0.5) * w / cols)
-                                cy = int(0.05 * h)
-                                radius = int(0.4 * (w / cols))
+                        # Radius relative to grid spacing
+                        if rows > 1:
+                            cy1 = board_positions[0, col][1]
+                            cy2 = board_positions[1, col][1]
+                            cell_h = abs(cy2 - cy1)
+                            radius_i = int(max(8, round(cell_h * 0.35)))
+                        else:
+                            radius_i = 20
 
-                            cv2.circle(output, (cx, cy), radius, (0, 255, 0), thickness=3)
-                        except Exception as e:
-                            if "Cheating detected" not in self.message_label.cget("text"):
-                                self.message_label.config(text=f"Highlight error: {e}")
+                        landing_row = self._find_landing_row(logic_board, col)
+
+                        if landing_row is not None:
+                            x_end, y_end = board_positions[landing_row, col]
+                            x_end_i = int(round(x_end))
+                            y_end_i = int(round(y_end))
+
+                            # Draw arrow from ghost circle to landing cell
+                            cv2.arrowedLine(
+                                output,
+                                (cx_top_i, cy_top_i),
+                                (x_end_i, y_end_i),
+                                (0, 255, 0),
+                                thickness=2,
+                                tipLength=0.1
+                            )
+
+                        cv2.circle(output, (cx_top_i, cy_top_i), radius_i, (0, 255, 0), thickness=-1)
+
+                    except Exception as e:
+                        if "Cheating detected" not in self.message_label.cget("text"):
+                            self.message_label.config(text=f"Highlight error: {e}")
+
+
 
         # Convert to Tk image
         output_rgb = cv2.cvtColor(output, cv2.COLOR_BGR2RGB)
@@ -421,5 +451,9 @@ class Connect4VideoGUI:
 if __name__ == "__main__":
     root = tk.Tk()
     # 0 = default webcam, change if needed (1, 2, ...) to whichever port you're using 
-    app = Connect4VideoGUI(root, camera_port=0)
+    # app = Connect4VideoGUI(root, camera_port=0)
+
+    # Uncomment to put in a prerecorded video file rather than a camera 
+    app = Connect4VideoGUI(root, video_path="test_video_red_wins.mp4")
     root.mainloop()
+
