@@ -421,5 +421,5 @@ class Connect4VideoGUI:
 if __name__ == "__main__":
     root = tk.Tk()
     # 0 = default webcam, change if needed (1, 2, ...) to whichever port you're using 
-    app = Connect4VideoGUI(root, camera_port=0)
+    app = Connect4VideoGUI(root, camera_port=1)
     root.mainloop()
