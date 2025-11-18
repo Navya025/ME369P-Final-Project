@@ -247,11 +247,7 @@ class Connect4VideoGUI:
     # all video updates 
 
     def _update_video(self):
-        """
-        Run board detection + AI on each frame from the video,
-        track stable boards, detect cheating & winner, and
-        note when the *first mover* ignores the AI suggestion.
-        """
+      
         if self.game_over:
             # Keeping frames, banners 
             self.root.after(100, self._update_video)
@@ -283,6 +279,7 @@ class Connect4VideoGUI:
         )
 
         board_state = self.feed.board_state()
+        board_positions = self.feed.board_positions()
         stable_changed = self._update_stable_board(board_state)
 
         if board_state is None and self.stable_board is None:
@@ -359,11 +356,11 @@ class Connect4VideoGUI:
                         )
                         if "Cheating detected" not in self.message_label.cget("text"):
                             self.message_label.config(
-                                text="No move available – this position is effectively terminal."
+                                text="No move available - this position is effectively terminal."
                             )
                     else:
                         self.status_label.config(
-                            text=f"Board detected. AI suggests column: {best_col}"
+                            text=f"Board detected. AI suggests column: {best_col+1}"
                         )
 
                         try:
@@ -403,7 +400,7 @@ class Connect4VideoGUI:
 
         self.root.after(30, self._update_video)
 
-    # ---------- CLEANUP ----------
+    # closing actions - stop timer 
 
     def on_close(self):
         self.timer_running = False
