@@ -4,7 +4,8 @@ import time
 import cv2
 import numpy as np
 from PIL import Image, ImageTk
-import winsound
+import simpleaudio as sa
+
 
 
 from read_board import CameraFeed
@@ -14,6 +15,10 @@ from connect4_solver import RED, YEL, choose_best_move, is_winner
 
 
 class Connect4VideoGUI:
+    @staticmethod
+    def play_sound_async(path):
+        sa.WaveObject.from_wave_file(path).play()
+
     # Replace video_path with camera_port = 0
     def __init__(self, root, video_path):
     # def __init__(self, root, camera_port = 0): # this line takes in the camera port instead of the video path 
@@ -73,7 +78,7 @@ class Connect4VideoGUI:
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
     # Building UI 
-
+    
     def _build_ui(self):
         # ----- Menu bar -----
         menubar = tk.Menu(self.root)
@@ -191,11 +196,12 @@ class Connect4VideoGUI:
             return "Yellow"
         return "Unknown"
     
+    
     # Plays sound when someone is caught cheating 
     def _play_cheat_sound(self):
         
         try:
-            winsound.PlaySound("you-cheat.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
+            play_sound_async("you-cheat.wav")
             print("Cheater sound played!")
         except Exception as e:
             print(f"Error playing cheat sound: {e}")
@@ -480,6 +486,6 @@ if __name__ == "__main__":
     # app = Connect4VideoGUI(root, camera_port=0)
 
     # Uncomment/comment to put in a prerecorded video file rather than a camera 
-    app = Connect4VideoGUI(root, video_path="test_video_red_cheats.mp4")
+    app = Connect4VideoGUI(root, video_path="INSERT VIDEO FILE PATH HERE")
     root.mainloop()
 

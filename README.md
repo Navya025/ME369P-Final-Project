@@ -44,7 +44,7 @@ Pillow
 | `read_board.py`                    | Computer vision pipeline for detecting board state |
 | `test_connect-4.py`                | Offline AI tests using synthetic boards            |
 | `connect4_gui.py`                  | **Main live webcam GUI**                           |
-| `connect4_video_gui.py` (optional) | GUI for testing using prerecorded videos           |
+|         |
 
 ---
 
@@ -192,35 +192,6 @@ python connect4_gui.py
 
 ---
 
-# Optional: `connect4_video_gui.py` – Prerecorded Video Testing
-
-This file works exactly like `connect4_gui.py`, except:
-
-* It uses a **video file** instead of a camera
-* Ideal for:
-
-  * Controlled lighting
-  * Replay testing
-  * Debugging detection
-  * Detecting cheating in recorded gameplay
-
-### Run it:
-
-```bash
-python connect4_video_gui.py
-```
-
-### When used, it prints:
-
-```
-[VIDEO MODE] Using video file: <path>
-```
-
-Handles end-of-video gracefully with messages like:
-
-> "End of video or cannot read frame."
-
----
 
 # ▶How to Run Everything
 
@@ -235,16 +206,12 @@ pip install -r requirements.txt
 ```bash
 python connect4_gui.py
 ```
+Comment/Uncomment line 483 to run using video stream or live board. 
+Test videos are in the Test Videos folder
 
-### 3. Run the prerecorded video version (optional)
-
-```bash
-python connect4_video_gui.py
-```
-
-### 4. Run AI test cases (optional)
+### 4. Run AI test cases
 
 ```bash
-python test_connect-4.py
+pytest -q
 ```
 

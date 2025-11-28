@@ -1,3 +1,5 @@
-numpy
 opencv-python
+numpy
 Pillow
+simpleaudio
+pytest
