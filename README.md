@@ -146,7 +146,7 @@ python test_connect-4.py
 
 ---
 
-# 🖥️ `connect4_gui.py` – Main GUI (Live Webcam)
+# 🖥️ `connect4_gui.py` – Main GUI (Live Webcam and Video)
 
 This is the **primary file to run the full game**:
 
@@ -155,8 +155,8 @@ python connect4_gui.py
 ```
 
 ### Features
-
-* Live webcam feed
+* Live webcam feed or pre-recorded videos
+  * Pre-recorded videos may appear slow due to the added computation of OpenCV live decoding the video file
 * Real-time detection of 42 circles (6 rows × 7 columns)
 * Stability filtering (must appear identical for several frames)
 * Move detection:

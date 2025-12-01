@@ -101,8 +101,7 @@ class CameraFeed():
         return mean_color[:3] 
 if __name__ == "__main__":
     feed = CameraFeed()
-    feed.begin_feed(1)
-
+    feed.begin_feed(0)
 
     while True:
         frame, gray, keypoints = feed.detect_ellipse()

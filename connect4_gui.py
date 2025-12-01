@@ -18,6 +18,7 @@ class Connect4VideoGUI:
     @staticmethod
     def play_sound_async(path):
         sa.WaveObject.from_wave_file(path).play()
+        pass
 
     # Replace video_path with camera_port = 0
     def __init__(self, root, video_path):
@@ -201,7 +202,7 @@ class Connect4VideoGUI:
     def _play_cheat_sound(self):
         
         try:
-            play_sound_async("you-cheat.wav")
+            self.play_sound_async("you-cheat.wav")
             print("Cheater sound played!")
         except Exception as e:
             print(f"Error playing cheat sound: {e}")
@@ -486,6 +487,6 @@ if __name__ == "__main__":
     # app = Connect4VideoGUI(root, camera_port=0)
 
     # Uncomment/comment to put in a prerecorded video file rather than a camera 
-    app = Connect4VideoGUI(root, video_path="INSERT VIDEO FILE PATH HERE")
+    app = Connect4VideoGUI(root, video_path="Test Videos/[VIDEO NAME].mp4")
     root.mainloop()
 
