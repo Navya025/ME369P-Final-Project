@@ -11,7 +11,10 @@ import simpleaudio as sa
 from read_board import CameraFeed
 from connect4_solver import RED, YEL, choose_best_move, is_winner
 
-
+# There are three sections of code to comment/uncomment to switch between a camera port and video file path. 
+# 1) Line 24/27 Change object initialization 
+# 2) Line 35/42 Change feed initialization 
+# 3) Line 495/498 Change camera port/video file path 
 
 
 class Connect4VideoGUI:
@@ -20,24 +23,28 @@ class Connect4VideoGUI:
         sa.WaveObject.from_wave_file(path).play()
         pass
 
-    # Replace video_path with camera_port = 0
     def __init__(self, root, video_path):
+
+    # # UNCOMMENT/COMMENT 
     # def __init__(self, root, camera_port = 0): # this line takes in the camera port instead of the video path 
         self.root = root
         self.root.title("Connect 4 Live (Webcam + AI)")
-
-        # # Initialize camera 
         
-        # Uncomment/comment to switch to camera mode 
+        # # UNCOMMENT/COMMENT to switch to camera mode 
+
+        # Initialize camera 
         # self.feed = CameraFeed()
         # print(f"[CAMERA MODE] Using webcam index: {camera_port}") 
         # self.feed.begin_feed(camera_port)
+        # #
 
-        # Uncomment/comment to switch to video file mode 
+        # # UNCOMMENT/COMMENT to switch to video file mode 
+
         # Initialize prerecorded video 
         self.feed = CameraFeed()
         print(f"[VIDEO FILE MODE] Using video path: {video_path}") 
         self.feed.begin_feed(video_path)
+        # #
 
         # Initialize timer
         self.start_time = time.time()
@@ -482,11 +489,12 @@ class Connect4VideoGUI:
 
 if __name__ == "__main__":
     root = tk.Tk()
+    # UNCOMMENT/COMMENT to put in a webcam instead of a prerecorded video file 
+
     # 0 = default webcam, change if needed (1, 2, ...) to whichever port you're using 
-    # Uncomment/comment to put in a webcam instead of a prerecorded video file 
     # app = Connect4VideoGUI(root, camera_port=0)
 
-    # Uncomment/comment to put in a prerecorded video file rather than a camera 
+    # UNCOMMENT/COMMENT to put in a prerecorded video file rather than a camera 
     app = Connect4VideoGUI(root, video_path="Test Videos/[VIDEO NAME].mp4")
     root.mainloop()
 
